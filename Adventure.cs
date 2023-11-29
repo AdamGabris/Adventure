@@ -23,10 +23,6 @@ namespace Adventure
 
         const string DASH = "-";
         const string PROMPT_SYMBOL = "> ";
-        const int MAX_LINE_LENGTH = 60;
-
-
-
 
         Dictionary<string, Action<AdvenureGame>> basicCommands = new Dictionary<string, Action<AdvenureGame>>()
         {
@@ -46,6 +42,8 @@ namespace Adventure
         public Action<Type, Object[]> OnExitScreen { get; set; }
 
         Player hero;
+        Inventory playerInventory;
+
         public void Init()
         {
             command = commandBuffer = String.Empty;
@@ -53,6 +51,7 @@ namespace Adventure
             currentLocation = parser.CreateLocationFromDescription(AssetsAndSettings.GAME_SOURCE);
             currentDescription = currentLocation.Description;
             hero = new Player();
+            playerInventory = new Inventory();
         }
         public void Input()
         {
@@ -136,6 +135,21 @@ namespace Adventure
                                         currentLocation = parser.CreateLocationFromDescription($"game/{assertionValue}");
                                         currentDescription = $"{currentDescription}\n{currentLocation.Description}";
                                     }
+
+                                    if (assertionKey == "Player" && assertionValue.StartsWith("Inventory.add"))
+                                    {
+                                        string itemName = assertionValue.Substring("Inventory.add".Length).Trim();
+                                        if (currentLocation.Inventory.ContainsKey(itemName))
+                                        {
+                                            playerInventory.Add(currentLocation.Inventory[itemName]);
+                                            currentLocation.Inventory.Remove(itemName);
+                                        }
+                                        else
+                                        {
+                                            // If the item is not in the current location's inventory, print an error message
+                                            Console.WriteLine($"Error: Item '{itemName}' not found in current location's inventory.");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -152,12 +166,14 @@ namespace Adventure
 
                 command = String.Empty;
 
-                // This is not a good solution, rewrite for clearity.
+                // This is not a good solution, rewrite for clarity.
                 if (hero.hp == 0)
                 {
                     currentDescription += "You died 💀"; //TODO: Remove magick string, les statick feadback?
 
                 }
+
+
 
             }
         }
@@ -172,7 +188,7 @@ namespace Adventure
 
                 Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
 
-                string[] lines = SplitIntoLines(currentDescription, MAX_LINE_LENGTH);
+                string[] lines = SplitIntoLines(currentDescription, MAX_LINE_WIDTH);
                 foreach (string line in lines)
                 {
                     Write(Reset(ColorizeWords(line, ANSICodes.Colors.Blue, ANSICodes.Colors.Yellow)), newLine: true);
@@ -180,6 +196,12 @@ namespace Adventure
                 currentRow = Console.CursorTop + PADDING;
                 Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
                 Write($"{new string(DASH[0], MAX_LINE_WIDTH)}", newLine: true);
+
+                // Display the inventory
+                currentRow = Console.CursorTop + PADDING;
+                Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
+                Write("Inventory: " + playerInventory.ToString(), newLine: true);
+
                 currentRow = Console.CursorTop + PADDING;
                 Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
                 Write(PROMPT_SYMBOL + commandBuffer);
