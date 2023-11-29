@@ -8,7 +8,7 @@
     Description = A rabbit that looks not to frendly
     Status = faraway
     [Action.faraway.kick]
-    Description => The rabbit is to war away, you over ballance and fall on your arse.
+    Description => The rabbit is to far away, you over ballance and fall on your arse.
     Player => hp.random(kick)
 
 

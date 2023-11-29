@@ -1,0 +1,17 @@
+[location]
+    Id: "The Second Floor"
+    Description: "You are on the floor of a mysterious building. The air is stale and the walls are covered in dust. There are several doors leading to different rooms."
+
+[Map]
+    name: "Map"
+    description: "A rusty old key. It looks like it has been here for ages."
+    location: "Floor"
+    interactable: true
+    takeable: true
+
+[Painting]
+    name: "Mystic Reflections"
+    description: "A mesmerizing painting that captures the essence of a mystical realm. The colors shift and change as you gaze into it, revealing hidden secrets."
+    location: "Floor"
+    interactable: true
+    takeable: false

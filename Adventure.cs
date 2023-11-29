@@ -20,6 +20,14 @@ namespace Adventure
         const string CLEAR_COMMAND = "clear";
         const string HELP_COMMAND = "help";
         const string LOOK_COMMAND = "look";
+
+        const string DASH = "-";
+        const string PROMPT_SYMBOL = "> ";
+        const int MAX_LINE_LENGTH = 60;
+
+
+
+
         Dictionary<string, Action<AdvenureGame>> basicCommands = new Dictionary<string, Action<AdvenureGame>>()
         {
             [QUIT_COMMAND] = (game) => { game.OnExitScreen(typeof(SplashScreen), new object[] { AssetsAndSettings.SPLASH_ART_FILE, true }); },
@@ -48,33 +56,14 @@ namespace Adventure
         }
         public void Input()
         {
-            ///TODO: Refactor i.e. make this function more readable. 
             if (Console.KeyAvailable)
             {
-                ConsoleKeyInfo keyInfo = Console.ReadKey(false);
-                if (keyInfo.Key == ConsoleKey.Enter)
-                {
-                    command = commandBuffer.ToLower();
-                    commandBuffer = String.Empty;
-                }
-                else
-                {
-                    if (keyInfo.Key == ConsoleKey.Backspace)
-                    {
-                        if (commandBuffer.Length >= 1)
-                        {
-                            commandBuffer = commandBuffer.Substring(0, commandBuffer.Length - 1);
-                        }
-                    }
-                    else
-                    {
-                        commandBuffer += keyInfo.KeyChar;
-                    }
-
-                }
+                ProcessKey();
                 dirty = true;
             }
         }
+
+
         public void Update()
         {
             ///TODO: refactor this function. i.e. make it more readable. 
@@ -183,23 +172,63 @@ namespace Adventure
 
                 Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
 
-                ///TODO: There is a problem when the description extends over 
-                Write(Reset(ColorizeWords(currentDescription, ANSICodes.Colors.Blue, ANSICodes.Colors.Yellow)), newLine: true);
-
+                string[] lines = SplitIntoLines(currentDescription, MAX_LINE_LENGTH);
+                foreach (string line in lines)
+                {
+                    Write(Reset(ColorizeWords(line, ANSICodes.Colors.Blue, ANSICodes.Colors.Yellow)), newLine: true);
+                }
                 currentRow = Console.CursorTop + PADDING;
                 Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
-                /// TODO: Magic string, fix
-                Write($"{new string('-', MAX_LINE_WIDTH)}", newLine: true);
-
+                Write($"{new string(DASH[0], MAX_LINE_WIDTH)}", newLine: true);
                 currentRow = Console.CursorTop + PADDING;
                 Write(ANSICodes.Positioning.SetCursorPos(currentRow, currentColumn));
-                /// TODO: Magic string, fix
-                Write($"> {commandBuffer}");
+                Write(PROMPT_SYMBOL + commandBuffer);
+            }
+        }
+
+        #region Helper Functions ------------------------------------------------------------------------------------
+
+        void ProcessKey()
+        {
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                command = commandBuffer;
+                commandBuffer = String.Empty;
+            }
+            else if (keyInfo.Key == ConsoleKey.Backspace)
+            {
+                if (commandBuffer.Length > 0)
+                {
+                    commandBuffer = commandBuffer.Substring(0, commandBuffer.Length - 1);
+                }
+            }
+            else
+            {
+                commandBuffer += keyInfo.KeyChar;
             }
         }
 
 
+        string[] SplitIntoLines(string str, int maxLineLength)
+        {
+            List<string> lines = new List<string>();
+            int index = 0;
+            while (index < str.Length)
+            {
+                int remainingLength = str.Length - index;
+                int length = Math.Min(maxLineLength, remainingLength);
+                string line = str.Substring(index, length);
+                int leadingSpaces = (maxLineLength - line.Length) / 2;
+                line = new string(' ', leadingSpaces) + line;
+                lines.Add(line);
+                index += line.Length;
+            }
+            return lines.ToArray();
+        }
+
+        #endregion
+
+
     }
-
-
 }
